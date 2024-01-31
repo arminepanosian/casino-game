@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="profile.css">
+
+</head>
+
+<body>
+    <div class="card">
+        <div class="ds-top"></div>
+        <div class="avatar-holder">
+            <img src="profile.png" alt="Albert Einstein">
+        </div>
+        <div class="name">
+            <a href="#" id="username"></a>
+        </div>
+        <div class="button">
+        </div>
+        <div class="ds-info">
+            <div class="ds pens">
+                <h6 title="Number of pens created by the user">All spins <i class="fas fa-edit"></i></h6>
+                <p id="allSpins"></p>
+            </div>
+            <div class="ds projects">
+                <h6 title="Number of projects created by the user">available spins
+                    <i class="fas fa-project-diagram"></i>
+                </h6>
+                <p id="deposit"></p>
+            </div>
+            <div class="ds posts">
+                <h6 title="Number of posts">WINNINGS <i class="fas fa-comments"></i></h6>
+                <p id="WINNINGS"></p>
+            </div>
+
+        </div>
+        <button class="glow-on-hover" type="submit" onclick="prize()">Заказать призы</button>
+
+    </div>
+    <a href="./index.html">
+        <div class="iconWheel">
+            <img src="./wheel.png" alt="" width="150px">
+        </div>
+    </a>
+    <div id="winning" class="winning">
+
+        <div class="winning-div">
+            <h2>Ваши последые выигришы</h2>
+            <h4>Покупайте еше билеты чтобы получить больше ценные призы!</h4>
+        </div>
+        <div id="infoPrize">
+            <div id="imgPrize">
+
+            </div>
+            <div id="discPrize">
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <script>
+        const getData = async () => {
+            try {
+                const req = await fetch('http://localhost:3003/getData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: localStorage.getItem("user")
+                    }),
+                })
+                const res = await req.json()
+
+                localStorage.setItem("infoUser", JSON.stringify(res))
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        getData()
+        const username = document.getElementById("username")
+        const allSpins = document.getElementById("allSpins")
+        const winnings = document.getElementById("WINNINGS")
+        const deposit = document.getElementById("deposit")
+
+        let infoUser = localStorage.getItem('infoUser')
+        let parse = JSON.parse(infoUser)
+        console.log(parse);
+        username.textContent = localStorage.getItem("user");
+        allSpins.textContent = parse.AllSpins
+        deposit.textContent = parse.spins
+        winnings.textContent = parse.history.length
+        const prizeElements = parse.history.reverse().map((prize, i) => `
+  <div id="infoPrize">
+    <div id="imgPrize">
+      <img src="${prize.src}" alt="Изображение приза">
+    </div>
+    <div id="discPrize">
+      ${prize.name}
+    </div>
+    <div onclick="orderPrize(${i})" id="orderPrize" style="display: ${prize.name === 'nothing' || prize.name === "return" || prize.order == true ? 'none' : 'block'};">
+        <span>Order</span>
+    </div>
+    <div id="orderPrizeTime" style="display: ${prize.name !== 'nothing' && prize.name !== "return" && prize.order == true ? 'block' : 'none'};">
+        Ordered
+    </div>
+  </div>
+`);
+        const orderPrize = async (i) => {
+            try {
+                let phone = prompt("Write your phone number")
+            let email = prompt("Write you уmail")
+                const req = await fetch('http://localhost:3003/orderprize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        phone : phone,
+                        username: localStorage.getItem("user"),
+                        id: parse.history[i].id
+                    }),
+                })
+                if(req.status === 200){
+                    alert("Your order has been received! A response will be sent to your email.")
+                    window.location.reload()
+                }
+            }
+            catch (err) {
+                console.log(err);
+            }
+         
+
+        }
+
+        // Получаем родительский элемент, в который вставим созданные элементы
+        const prizesContainer = document.getElementById('winning');
+
+        // Вставляем созданные элементы в родительский элемент
+        prizesContainer.innerHTML = prizeElements.join('');
+        const follow = () => {
+            target.clicked += 1;
+            target.btn.innerHTML = 'Following <i class="fas fa-user-times"></i>';
+
+            if (target.clicked % 2 === 0) {
+                target.currentFollowers -= 1;
+                target.btn.innerHTML = 'Follow <i class="fas fa-user-plus"></i>';
+            }
+            else {
+                target.currentFollowers += 1;
+            }
+
+            target.fw.textContent = target.currentFollowers;
+            target.btn.classList.toggle("following");
+        }
+        function prize() {
+            const winning = document.getElementById('winning');
+            winning.style.display = 'block';
+        }
+
+        document.addEventListener('mousedown', function (event) {
+            const winning = document.getElementById('winning');
+            if (!winning.contains(event.target) && event.target !== winning) {
+                winning.style.display = 'none';
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
